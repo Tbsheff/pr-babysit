@@ -51,6 +51,10 @@ export class WatchLane {
     return this.#terminated;
   }
 
+  public get hasPendingWork(): boolean {
+    return this.#pendingDeliveryIds.size > 0 || this.#pendingTriggers.length > 0 || this.#reconcileRequested;
+  }
+
   public consume(): LaneSnapshot {
     const snapshot: LaneSnapshot = {
       deliveryIds: [...this.#pendingDeliveryIds],
