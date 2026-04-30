@@ -32,5 +32,7 @@ describe("agent runner", () => {
     expect(result.exitCode).toBe(0);
     expect(runner.command).toBe("claude");
     expect(runner.args).toContain("-p");
+    expect(runner.args).not.toContain("--file");
+    expect(runner.args.join("\n")).toContain(`You are babysitting ${target}.`);
   });
 });

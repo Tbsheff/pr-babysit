@@ -1,6 +1,3 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { spawn } from "node:child_process";
 
 import type { AgentRunInput, AgentRunResult } from "./runner-boundary.js";
@@ -47,19 +44,13 @@ export interface RunLocalAgentOptions {
 }
 
 export async function runLocalAgent(input: AgentRunInput, options: RunLocalAgentOptions): Promise<AgentRunResult> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "pr-babysit-agent-"));
-  const promptFile = path.join(dir, "prompt.md");
-  await writeFile(
-    promptFile,
-    buildAgentPrompt({
-      target: input.target,
-      expectedHeadSha: input.expectedHeadSha,
-      runReason: input.runReason,
-      triggers: input.triggers
-    })
-  );
-
-  const command = detectAgentCommand(options.agent, promptFile);
+  const prompt = buildAgentPrompt({
+    target: input.target,
+    expectedHeadSha: input.expectedHeadSha,
+    runReason: input.runReason,
+    triggers: input.triggers
+  });
+  const command = detectAgentCommand(options.agent, prompt);
   const exitCode = await options.runner.run(command.command, command.args);
   return { exitCode, changedFiles: [] };
 }

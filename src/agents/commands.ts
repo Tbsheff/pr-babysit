@@ -11,20 +11,20 @@ export interface AgentCommand {
   readonly args: readonly string[];
 }
 
-export function detectAgentCommand(kind: AgentKind, promptFile: string): AgentCommand {
+export function detectAgentCommand(kind: AgentKind, prompt: string): AgentCommand {
   if (kind === "claude") {
-    return { command: "claude", args: ["-p", "--file", promptFile] };
+    return { command: "claude", args: ["-p", prompt] };
   }
 
   if (kind === "codex") {
-    return { command: "codex", args: ["exec", "--file", promptFile] };
+    return { command: "codex", args: ["exec", prompt] };
   }
 
   if (commandExists("claude")) {
-    return detectAgentCommand("claude", promptFile);
+    return detectAgentCommand("claude", prompt);
   }
   if (commandExists("codex")) {
-    return detectAgentCommand("codex", promptFile);
+    return detectAgentCommand("codex", prompt);
   }
 
   throw new BabysitError("not_found", "No local agent found. Install claude or codex, or pass --cmd.");
