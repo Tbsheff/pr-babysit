@@ -24,15 +24,19 @@ Bootstrap the greenfield project as a strict TypeScript package with one executa
 The current repo has no `package.json`, no `.git`, and an empty CodeDB snapshot. Safety-critical git behavior must be proven through disposable fixture repos, not the planning workspace itself.
 
 ## Acceptance
-- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` exist and pass on the scaffold.
-- [ ] `pr-babysit --help` runs through the built CLI entrypoint.
-- [ ] The package has no runtime dependency on `agent-reviews`.
-- [ ] The source layout has clear homes for pure GitHub review core, privileged local runner/git code, CLI commands, MCP tools, webhook handling, and agent code.
-- [ ] Test helpers can create disposable local repos/remotes for git safety scenarios.
-- [ ] Fixture helpers validate the concrete fixture schema, support startup snapshots, per-delivery `before`/`after` snapshots, inline `payload` JSON, payload-path references, ordered refetch snapshot arrays, and process-lost in-memory replay scenarios.
+- [x] `pnpm lint`, `pnpm typecheck`, and `pnpm test` exist and pass on the scaffold.
+- [x] `pr-babysit --help` runs through the built CLI entrypoint.
+- [x] The package has no runtime dependency on `agent-reviews`.
+- [x] The source layout has clear homes for pure GitHub review core, privileged local runner/git code, CLI commands, MCP tools, webhook handling, and agent code.
+- [x] Test helpers can create disposable local repos/remotes for git safety scenarios.
+- [x] Fixture helpers validate the concrete fixture schema, support startup snapshots, per-delivery `before`/`after` snapshots, inline `payload` JSON, payload-path references, ordered refetch snapshot arrays, and process-lost in-memory replay scenarios.
 
 ## Done summary
-Pending implementation.
+Implemented the strict TypeScript single-package scaffold with a built `pr-babysit` entrypoint, explicit source homes for CLI/core/MCP/webhooks/agents, Vitest/ESLint/typecheck scripts, fixture replay helpers, disposable git repository helpers, seed testdata, and README safety notes. The package has no runtime dependency on `agent-reviews`.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `node dist/bin/pr-babysit.js --help`

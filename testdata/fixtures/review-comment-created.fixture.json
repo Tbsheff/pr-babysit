@@ -1,0 +1,55 @@
+{
+  "target": {
+    "repo": "OWNER/REPO",
+    "number": 123
+  },
+  "startup": "startup-open",
+  "deliveries": [
+    {
+      "id": "delivery-1",
+      "event": "pull_request_review_comment",
+      "headers": {
+        "X-GitHub-Delivery": "delivery-1"
+      },
+      "payloadPath": "review-comment-created.payload.json",
+      "before": "comment-created",
+      "after": "reply-present"
+    }
+  ],
+  "snapshots": {
+    "startup-open": {
+      "pr": {
+        "state": "OPEN"
+      },
+      "threads": [],
+      "comments": [],
+      "checks": []
+    },
+    "comment-created": {
+      "pr": {
+        "state": "OPEN"
+      },
+      "threads": [
+        {
+          "threadId": "review-thread:PRRT_test",
+          "isResolved": false
+        }
+      ],
+      "comments": [],
+      "checks": []
+    },
+    "reply-present": {
+      "pr": {
+        "state": "OPEN"
+      },
+      "threads": [
+        {
+          "threadId": "review-thread:PRRT_test",
+          "isResolved": true
+        }
+      ],
+      "comments": [],
+      "checks": []
+    }
+  }
+}
