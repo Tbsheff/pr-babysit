@@ -108,6 +108,29 @@ describe("CLI commands", () => {
       await rm(tempDir, { force: true, recursive: true });
     }
   });
+
+  test("creates a local webhook secret without GitHub services", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "pr-babysit-setup-"));
+    const envFile = path.join(tempDir, "env");
+    const originalEnvFile = process.env["PR_BABYSIT_ENV_FILE"];
+    process.env["PR_BABYSIT_ENV_FILE"] = envFile;
+
+    try {
+      const result = await runCliForTest(["setup", "secret"]);
+      expect(result.code).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, file: envFile, created: true });
+
+      const text = await readFile(envFile, "utf8");
+      expect(text).toMatch(/^export PR_BABYSIT_WEBHOOK_SECRET=[0-9a-f]{64}\n$/u);
+
+      const second = await runCliForTest(["setup", "secret"]);
+      expect(JSON.parse(second.stdout)).toMatchObject({ ok: true, file: envFile, created: false });
+      await expect(readFile(envFile, "utf8")).resolves.toBe(text);
+    } finally {
+      restorePrBabysitEnvFile(originalEnvFile);
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
 });
 
 function restoreCodexHome(value: string | undefined): void {
@@ -126,4 +149,13 @@ function restoreClaudeHome(value: string | undefined): void {
   }
 
   process.env["CLAUDE_HOME"] = value;
+}
+
+function restorePrBabysitEnvFile(value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env["PR_BABYSIT_ENV_FILE"];
+    return;
+  }
+
+  process.env["PR_BABYSIT_ENV_FILE"] = value;
 }

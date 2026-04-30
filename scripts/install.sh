@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${PR_BABYSIT_VERSION:-0.1.2}"
+VERSION="${PR_BABYSIT_VERSION:-0.1.3}"
 REPO="${PR_BABYSIT_REPO:-Tbsheff/pr-babysit}"
 PACKAGE_URL="${PR_BABYSIT_PACKAGE_URL:-https://github.com/${REPO}/releases/download/v${VERSION}/pr-babysit-${VERSION}.tgz}"
 
@@ -78,6 +78,7 @@ else
   echo "gh was not found. Install GitHub CLI and run: gh auth login" >&2
 fi
 
+pr-babysit setup secret
 pr-babysit skills install
 pr-babysit --help >/dev/null
 

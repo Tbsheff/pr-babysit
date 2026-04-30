@@ -19,15 +19,16 @@ The scaffold provides:
 Install the latest release without cloning the repo:
 
 ```bash
-curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.2/install.sh | bash
+curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.3/install.sh | bash
 ```
 
-The installer uses `npm config get prefix`, not `npm bin -g`, so it works across npm versions that removed `npm bin`. It installs the release tarball, verifies `pr-babysit` is on PATH, installs `cli/gh-webhook` when `gh` is available, and copies the bundled skill into Codex and Claude.
+The installer uses `npm config get prefix`, not `npm bin -g`, so it works across npm versions that removed `npm bin`. It installs the release tarball, verifies `pr-babysit` is on PATH, creates a local webhook secret, installs `cli/gh-webhook` when `gh` is available, and copies the bundled skill into Codex and Claude.
 
 Manual install:
 
 ```bash
-npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.2/pr-babysit-0.1.2.tgz
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.3/pr-babysit-0.1.3.tgz
+pr-babysit setup secret
 pr-babysit skills install
 ```
 
@@ -37,6 +38,8 @@ The CLI uses `GITHUB_TOKEN` when it is set; otherwise it falls back to `gh auth 
 
 - Codex: `${CODEX_HOME:-$HOME/.codex}/skills/babysit`
 - Claude: `${CLAUDE_HOME:-$HOME/.claude}/skills/babysit`
+
+`pr-babysit setup secret` creates `${XDG_CONFIG_HOME:-$HOME/.config}/pr-babysit/env` with `0600` permissions. `watch` loads `PR_BABYSIT_WEBHOOK_SECRET` from that file automatically unless the environment variable is already set.
 
 ## Development Commands
 
@@ -71,10 +74,9 @@ See [MCP config examples](docs/mcp-config-examples.md).
 
 ## Watch Flow
 
-Network watch mode requires a clean checked-out target worktree, GitHub auth, same-repo PR head, branch/upstream alignment, and `PR_BABYSIT_WEBHOOK_SECRET`.
+Network watch mode requires a clean checked-out target worktree, GitHub auth, same-repo PR head, branch/upstream alignment, and a webhook secret from either `PR_BABYSIT_WEBHOOK_SECRET` or the local config file.
 
 ```bash
-export PR_BABYSIT_WEBHOOK_SECRET="$(openssl rand -hex 32)"
 pr-babysit watch OWNER/REPO#123 --agent auto --scope all
 ```
 

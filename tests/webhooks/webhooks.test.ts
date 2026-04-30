@@ -1,8 +1,13 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import { describe, expect, test } from "vitest";
 
 import { normalizeWebhookEvent } from "../../src/webhooks/normalize.js";
 import { WatchLane } from "../../src/webhooks/lane.js";
 import { signPayload, verifySignature } from "../../src/webhooks/signature.js";
+import { requireWebhookSecret } from "../../src/webhooks/server.js";
 import { reconcileTarget } from "../../src/webhooks/reconcile.js";
 import { GitHubReviewCore } from "../../src/core/github/review-core.js";
 import { FakeGitHubReviewAdapter } from "../../src/core/github/fake-adapter.js";
@@ -14,6 +19,21 @@ describe("webhook utilities", () => {
     const signature = signPayload("secret", body);
     expect(verifySignature("secret", body, signature)).toBe(true);
     expect(verifySignature("secret", body, "sha256=bad")).toBe(false);
+  });
+
+  test("loads webhook secret from local config when env is unset", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "pr-babysit-secret-"));
+    const envFile = path.join(tempDir, "env");
+    await writeFile(envFile, "export PR_BABYSIT_WEBHOOK_SECRET=stored-secret\n", "utf8");
+
+    try {
+      expect(requireWebhookSecret({ PR_BABYSIT_ENV_FILE: envFile })).toBe("stored-secret");
+      expect(requireWebhookSecret({ PR_BABYSIT_ENV_FILE: envFile, PR_BABYSIT_WEBHOOK_SECRET: "runtime-secret" })).toBe(
+        "runtime-secret"
+      );
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
   });
 
   test("normalizes event matrix decisions", () => {

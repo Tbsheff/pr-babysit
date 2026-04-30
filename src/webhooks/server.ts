@@ -1,6 +1,7 @@
 import http from "node:http";
 
 import { BabysitError } from "../core/errors.js";
+import { loadStoredWebhookSecret } from "../core/config.js";
 import { verifySignature } from "./signature.js";
 
 export interface WebhookRequest {
@@ -72,9 +73,12 @@ export async function startWebhookServer(
 }
 
 export function requireWebhookSecret(env: NodeJS.ProcessEnv = process.env): string {
-  const secret = env["PR_BABYSIT_WEBHOOK_SECRET"];
-  if (secret === undefined || secret.length === 0) {
-    throw new BabysitError("missing_webhook_secret", "PR_BABYSIT_WEBHOOK_SECRET is required for network watch mode.");
+  const secret = env["PR_BABYSIT_WEBHOOK_SECRET"] ?? loadStoredWebhookSecret(env);
+  if (secret === null || secret.length === 0) {
+    throw new BabysitError(
+      "missing_webhook_secret",
+      "PR_BABYSIT_WEBHOOK_SECRET is required for network watch mode. Run `pr-babysit setup secret` or the release installer."
+    );
   }
   return secret;
 }

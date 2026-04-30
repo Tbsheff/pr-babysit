@@ -4,6 +4,7 @@ import { runChecksCommand } from "./commands/checks.js";
 import { runCommentsCommand } from "./commands/comments.js";
 import { runPrCommand } from "./commands/pr.js";
 import { runReviewsCommand } from "./commands/reviews.js";
+import { runSetupCommand } from "./commands/setup.js";
 import { runSkillsCommand } from "./commands/skills.js";
 import type { CliServices } from "./core-services.js";
 import { createDefaultCliServices } from "./core-services.js";
@@ -38,6 +39,9 @@ export async function runCli(argv: readonly string[], io: CliIo, services?: CliS
 async function dispatch(command: string, argv: readonly string[], services?: CliServices): Promise<unknown> {
   if (command === "skills") {
     return runSkillsCommand(argv);
+  }
+  if (command === "setup") {
+    return runSetupCommand(argv);
   }
 
   const resolvedServices = services ?? createDefaultCliServices();

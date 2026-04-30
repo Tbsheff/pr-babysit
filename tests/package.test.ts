@@ -11,6 +11,7 @@ describe("package manifest", () => {
     const text = await readFile("scripts/install.sh", "utf8");
     expect(text).toContain("npm config get prefix");
     expect(text).not.toContain("npm bin");
+    expect(text).toContain("pr-babysit setup secret");
     expect(text).toContain("pr-babysit skills install");
   });
 });

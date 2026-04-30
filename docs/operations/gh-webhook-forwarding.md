@@ -2,7 +2,7 @@
 
 Network watch mode is designed for local operation with `gh webhook forward`.
 
-The expected forwarder command is:
+`pr-babysit watch` loads the webhook secret from `PR_BABYSIT_WEBHOOK_SECRET` or `${XDG_CONFIG_HOME:-$HOME/.config}/pr-babysit/env`. Internally it starts:
 
 ```bash
 gh webhook forward \
