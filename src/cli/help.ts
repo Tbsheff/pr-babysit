@@ -4,7 +4,7 @@ export function formatHelp(): string {
 Usage:
   pr-babysit --help
   pr-babysit pr context [OWNER/REPO#NUMBER]
-  pr-babysit watch [OWNER/REPO#NUMBER]
+  pr-babysit watch [OWNER/REPO#NUMBER] [--detach]
   pr-babysit reviews list OWNER/REPO#NUMBER --json
   pr-babysit reviews reply OWNER/REPO#NUMBER THREAD_ID --expected-head SHA --body "..."
   pr-babysit reviews reply-and-resolve OWNER/REPO#NUMBER THREAD_ID --expected-head SHA --body "..."

@@ -19,7 +19,7 @@ The scaffold provides:
 Install the latest release without cloning the repo:
 
 ```bash
-curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.6/install.sh | bash
+curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.7/install.sh | bash
 ```
 
 The installer uses `npm config get prefix`, not `npm bin -g`, so it works across npm versions that removed `npm bin`. It installs the release tarball, verifies `pr-babysit` is on PATH, creates a local webhook secret, installs `cli/gh-webhook` when `gh` is available, and copies the bundled skill into Codex and Claude.
@@ -27,7 +27,7 @@ The installer uses `npm config get prefix`, not `npm bin -g`, so it works across
 Manual install:
 
 ```bash
-npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.6/pr-babysit-0.1.6.tgz
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.7/pr-babysit-0.1.7.tgz
 pr-babysit setup secret
 pr-babysit skills install
 ```
@@ -78,6 +78,12 @@ Network watch mode requires a clean checked-out target worktree, GitHub auth, sa
 
 ```bash
 pr-babysit watch OWNER/REPO#123 --agent auto --scope all
+```
+
+Skill launches use detached mode so `/babysit` returns immediately:
+
+```bash
+pr-babysit watch OWNER/REPO#123 --detach
 ```
 
 Fixture mode skips network ingress and webhook forwarding:

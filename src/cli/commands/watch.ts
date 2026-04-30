@@ -1,6 +1,11 @@
+import { closeSync, mkdirSync, openSync } from "node:fs";
+import { spawn } from "node:child_process";
+import path from "node:path";
+
 import { BabysitError } from "../../core/errors.js";
+import { configDirectory } from "../../core/config.js";
 import type { CliServices } from "../core-services.js";
-import { readFlag } from "../args.js";
+import { hasFlag, readFlag } from "../args.js";
 import { resolvePrTarget } from "../pr-target.js";
 import { requireWebhookSecret, startWebhookServer } from "../../webhooks/server.js";
 import { normalizeWebhookEvent } from "../../webhooks/normalize.js";
@@ -18,11 +23,15 @@ import type { PullRequestTarget } from "../../core/ids.js";
 import { parsePullRequestTarget } from "../../core/ids.js";
 
 export async function runWatchCommand(argv: readonly string[], services: CliServices): Promise<unknown> {
+  if (hasFlag(argv, "--detach")) {
+    return startDetachedWatch(argv);
+  }
+
   const fixture = readFlag(argv, "--fixture");
   const port = Number.parseInt(readFlag(argv, "--port") ?? "8787", 10);
   const agent = (readFlag(argv, "--agent") ?? "auto") as AgentKind;
   const cmd = readFlag(argv, "--cmd");
-  const target = resolvePrTarget(argv[0]);
+  const target = resolvePrTarget(firstWatchTarget(argv));
 
   if (fixture !== undefined) {
     return runFixtureWatch(fixture, target);
@@ -70,6 +79,50 @@ export async function runWatchCommand(argv: readonly string[], services: CliServ
   await forwarder.stop();
   await server.close();
   return { ok: true, mode: "watch", target, headSha: context.headSha };
+}
+
+function startDetachedWatch(argv: readonly string[]): { readonly ok: true; readonly mode: "detached"; readonly pid: number; readonly log: string } {
+  const logDirectory = path.join(configDirectory(), "logs");
+  mkdirSync(logDirectory, { recursive: true, mode: 0o700 });
+  const log = path.join(logDirectory, `watch-${Date.now().toString()}.log`);
+  const entrypoint = process.argv[1];
+  if (entrypoint === undefined || entrypoint.length === 0) {
+    throw new BabysitError("parse_failed", "Could not locate pr-babysit entrypoint for detached watch.");
+  }
+
+  const logFd = openSync(log, "a", 0o600);
+  const child = spawn(process.execPath, [entrypoint, "watch", ...argv.filter((arg) => arg !== "--detach")], {
+    cwd: process.cwd(),
+    detached: true,
+    env: process.env,
+    stdio: ["ignore", logFd, logFd]
+  });
+  closeSync(logFd);
+  child.unref();
+
+  return { ok: true, mode: "detached", pid: child.pid ?? 0, log };
+}
+
+function firstWatchTarget(argv: readonly string[]): string | undefined {
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === undefined) {
+      continue;
+    }
+
+    if (arg === "--fixture" || arg === "--port" || arg === "--agent" || arg === "--cmd" || arg === "--scope") {
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--")) {
+      continue;
+    }
+
+    return arg;
+  }
+
+  return undefined;
 }
 
 interface AgentWatchRunnerOptions {
