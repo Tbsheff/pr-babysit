@@ -15,7 +15,7 @@ export interface CliIo {
   readonly stderr: Writable;
 }
 
-export async function runCli(argv: readonly string[], io: CliIo, services: CliServices = createDefaultCliServices()): Promise<number> {
+export async function runCli(argv: readonly string[], io: CliIo, services?: CliServices): Promise<number> {
   const [command] = argv;
 
   if (command === undefined || command === "--help" || command === "-h" || command === "help") {
@@ -35,29 +35,32 @@ export async function runCli(argv: readonly string[], io: CliIo, services: CliSe
   }
 }
 
-async function dispatch(command: string, argv: readonly string[], services: CliServices): Promise<unknown> {
-  if (command === "pr") {
-    return runPrCommand(argv, services);
-  }
-  if (command === "reviews") {
-    return runReviewsCommand(argv, services);
-  }
-  if (command === "comments") {
-    return runCommentsCommand(argv, services);
-  }
-  if (command === "checks") {
-    return runChecksCommand(argv, services);
-  }
+async function dispatch(command: string, argv: readonly string[], services?: CliServices): Promise<unknown> {
   if (command === "skills") {
     return runSkillsCommand(argv);
   }
+
+  const resolvedServices = services ?? createDefaultCliServices();
+
+  if (command === "pr") {
+    return runPrCommand(argv, resolvedServices);
+  }
+  if (command === "reviews") {
+    return runReviewsCommand(argv, resolvedServices);
+  }
+  if (command === "comments") {
+    return runCommentsCommand(argv, resolvedServices);
+  }
+  if (command === "checks") {
+    return runChecksCommand(argv, resolvedServices);
+  }
   if (command === "watch") {
     const { runWatchCommand } = await import("./commands/watch.js");
-    return runWatchCommand(argv, services);
+    return runWatchCommand(argv, resolvedServices);
   }
   if (command === "mcp") {
     const { runMcpCommand } = await import("../mcp/server.js");
-    await runMcpCommand(argv, services);
+    await runMcpCommand(argv, resolvedServices);
     return null;
   }
 

@@ -1,13 +1,14 @@
 {
   "name": "pr-babysit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "files": [
     "dist",
     "README.md",
     "docs",
-    "skills"
+    "skills",
+    "scripts/install.sh"
   ],
   "bin": {
     "pr-babysit": "./dist/bin/pr-babysit.js"

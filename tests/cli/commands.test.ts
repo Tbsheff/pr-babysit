@@ -86,7 +86,7 @@ describe("CLI commands", () => {
     process.env["CLAUDE_HOME"] = path.join(tempDir, "claude");
 
     try {
-      const result = await runCliForTest(["skills", "install"], services());
+      const result = await runCliForTest(["skills", "install"]);
       expect(result.code).toBe(0);
       expect(JSON.parse(result.stdout)).toMatchObject({
         ok: true,

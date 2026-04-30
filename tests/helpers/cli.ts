@@ -16,7 +16,7 @@ class BufferWritable extends Writable {
   }
 }
 
-export async function runCliForTest(argv: readonly string[], services: CliServices): Promise<{
+export async function runCliForTest(argv: readonly string[], services?: CliServices): Promise<{
   readonly code: number;
   readonly stdout: string;
   readonly stderr: string;
