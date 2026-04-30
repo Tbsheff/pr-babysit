@@ -1,0 +1,16 @@
+{
+  "assignee": null,
+  "claim_note": "",
+  "claimed_at": null,
+  "created_at": "2026-04-30T04:49:46.604035Z",
+  "depends_on": [
+    "fn-1-build-typescript-pr-babysitter.2"
+  ],
+  "epic": "fn-1-build-typescript-pr-babysitter",
+  "id": "fn-1-build-typescript-pr-babysitter.4",
+  "priority": null,
+  "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.4.md",
+  "status": "todo",
+  "title": "Expose MCP review tools",
+  "updated_at": "2026-04-30T06:33:46.376426Z"
+}

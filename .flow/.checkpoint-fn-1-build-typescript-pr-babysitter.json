@@ -1,0 +1,174 @@
+{
+  "created_at": "2026-04-30T04:52:03.008850Z",
+  "epic": {
+    "data": {
+      "branch_name": "fn-1-build-typescript-pr-babysitter",
+      "completion_review_status": "unknown",
+      "completion_reviewed_at": null,
+      "created_at": "2026-04-30T04:48:53.469619Z",
+      "default_impl": null,
+      "default_review": null,
+      "default_sync": null,
+      "depends_on_epics": [],
+      "id": "fn-1-build-typescript-pr-babysitter",
+      "next_task": 1,
+      "plan_review_status": "unknown",
+      "plan_reviewed_at": null,
+      "spec_path": ".flow/specs/fn-1-build-typescript-pr-babysitter.md",
+      "status": "open",
+      "title": "Build TypeScript PR babysitter",
+      "updated_at": "2026-04-30T04:49:34.443639Z"
+    },
+    "spec": "# Build TypeScript PR Babysitter\n\n## Overview\nBuild `pr-babysit` as a native TypeScript product that replaces `agent-reviews` instead of wrapping it. The product has three surfaces over one shared GitHub review core: a human CLI, an agent-facing MCP stdio server, and a tiny `/babysit` skill wrapper that launches `pr-babysit watch`.\n\nThe repo is greenfield: there is no package manifest, source tree, docs, git metadata, or reusable application code. `codedb.snapshot` contains zero indexed files, so the implementation should optimize for a clean vertical slice rather than migration compatibility.\n\n## Scope\nIn scope: strict TypeScript scaffold, GitHub review-thread core, CLI JSON commands, MCP request/response tools, local webhook watch loop with `gh webhook forward`, local agent runner, fail-closed commit/push loop, fixture tests, and setup/safety docs.\n\nOut of scope for v1: production webhook hosting, multi-PR watch mode, remote HTTP MCP, GitHub App check-run writes, and any runtime dependency on `agent-reviews`.\n\n## Architecture\n```mermaid\nflowchart TD\n  Human[Human or /babysit] --> CLI[pr-babysit CLI]\n  Agent[Agent MCP client] --> MCP[pr-babysit mcp]\n  CLI --> Core[Shared GitHub review core]\n  MCP --> Core\n  Webhook[GitHub webhook via gh forward] --> Watch[watch event loop]\n  Watch --> Runner[Local agent runner]\n  Runner --> Core\n  Core --> GQL[GitHub GraphQL reviewThreads]\n  Core --> REST[GitHub REST issue comments and checks]\n  Runner --> Git[Fail-closed git commit and push]\n```\n\n## Quick commands\n```bash\npnpm lint\npnpm typecheck\npnpm test\npr-babysit reviews list OWNER/REPO#123 --json\npr-babysit reviews reply-and-resolve THREAD_ID --body \"Fixed in abc123.\"\npr-babysit mcp\npr-babysit watch OWNER/REPO#123 --fixture testdata/webhooks/pull_request_review_comment.created.json\n```\n\n## Acceptance\n- **R1:** `pr-babysit` is a native TypeScript CLI/MCP implementation with no runtime dependency on `agent-reviews`.\n- **R2:** Inline review state comes from GitHub GraphQL `reviewThreads`; PR issue comments are modeled as a separate surface.\n- **R3:** Automated thread closure always replies before resolving; if the reply fails, the thread remains unresolved.\n- **R4:** MCP exposes request/response tools only; no MCP tool polls GitHub, watches events, runs arbitrary shell, commits, or pushes.\n- **R5:** `watch` acknowledges webhooks immediately, dedupes by `X-GitHub-Delivery`, and debounces/single-flights by `repo/pr/headSha`.\n- **R6:** Only the latest target PR head SHA may mutate GitHub review state or git state; stale runs abort or become read-only.\n- **R7:** Commit/push fails closed on dirty tree, detached or mismatched branch, missing upstream, remote advancement, and push rejection.\n- **R8:** `watch` exits when the target PR closes or merges.\n- **R9:** `checks.list` is explicitly read-only and defines whether it returns check runs, commit statuses, or both.\n- **R10:** First usable release includes README, MCP config example, auth notes, webhook-forwarding limits, git safety behavior, and the tiny `/babysit` wrapper contract.\n\n## Early proof point\nTask `fn-1-build-typescript-pr-babysitter.2` validates the core approach by listing unresolved review threads and performing reply-before-resolve through the shared GitHub review core without `agent-reviews`. If that cannot be made reliable, reconsider the GraphQL-first design before building the watch loop or MCP surface.\n\n## Risks\n- GitHub API boundaries are easy to blur: review threads, issue comments, and checks must stay separate in types and tools.\n- `gh webhook forward` is dev/test only and one forwarder per repo/org; docs and errors need to make that limitation obvious.\n- Always-push is sharp. The implementation must fail closed instead of relying on prompts or operator memory.\n- The agent runner is the least specified seam. Keep it thin, file-based, and easy to swap while the shared core owns GitHub mutations.\n\n## References\n- `.flow/config.json:2` \u2014 Flow memory is enabled in this greenfield planning workspace.\n- `.flow/config.json:5` \u2014 cross-epic plan sync is disabled, so keep this as one self-contained epic.\n- `.flow/config.json:9` \u2014 review backend is unset; `pr-babysit` should become the review engine rather than a wrapper.\n- `.flow/meta.json:2` \u2014 fresh Flow seed with `next_epic: 1`.\n- GitHub GraphQL mutations: `addPullRequestReviewThreadReply`, `resolveReviewThread`, `unresolveReviewThread`.\n- GitHub webhook best practices: return quickly, dedupe via `X-GitHub-Delivery`, and treat failed deliveries as non-automatic redelivery.\n- MCP TypeScript SDK: use the production v1 line with stdio first; do not mix v2 pre-alpha package/import surfaces into v1.\n\n## Open questions for implementation\n- In v1, treat \u201cslash commands\u201d as the local `/babysit` skill wrapper only; GitHub issue-comment slash commands can be a later product decision.\n- In v1, make `watch` single-repo, single-PR, single-process.\n- Store false-positive decisions as GitHub thread replies, not local hidden state.\n- Define \u201calways push\u201d as: push after a successful agent run when the agent committed or when the CLI created a commit; no empty commits by default.\n\n## Requirement coverage\n| Req | Description | Task(s) | Gap justification |\n|-----|-------------|---------|-------------------|\n| R1 | Native TypeScript implementation with no `agent-reviews` dependency | fn-1-build-typescript-pr-babysitter.1, fn-1-build-typescript-pr-babysitter.7 | \u2014 |\n| R2 | GraphQL review threads and separate issue comments | fn-1-build-typescript-pr-babysitter.2, fn-1-build-typescript-pr-babysitter.4 | \u2014 |\n| R3 | Reply before resolve | fn-1-build-typescript-pr-babysitter.2, fn-1-build-typescript-pr-babysitter.3, fn-1-build-typescript-pr-babysitter.4 | \u2014 |\n| R4 | MCP request/response tools only | fn-1-build-typescript-pr-babysitter.4 | \u2014 |\n| R5 | Webhook ack/dedupe/debounce/single-flight | fn-1-build-typescript-pr-babysitter.5 | \u2014 |\n| R6 | Latest-head mutation guard | fn-1-build-typescript-pr-babysitter.5, fn-1-build-typescript-pr-babysitter.6 | \u2014 |\n| R7 | Fail-closed commit/push | fn-1-build-typescript-pr-babysitter.6, fn-1-build-typescript-pr-babysitter.7 | \u2014 |\n| R8 | Exit on PR close/merge | fn-1-build-typescript-pr-babysitter.5 | \u2014 |\n| R9 | Read-only checks contract | fn-1-build-typescript-pr-babysitter.2, fn-1-build-typescript-pr-babysitter.4 | \u2014 |\n| R10 | Docs and skill wrapper contract | fn-1-build-typescript-pr-babysitter.7 | \u2014 |\n"
+  },
+  "epic_id": "fn-1-build-typescript-pr-babysitter",
+  "schema_version": 2,
+  "tasks": [
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:45.887688Z",
+        "depends_on": [],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.1",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.1.md",
+        "status": "todo",
+        "title": "Bootstrap strict TypeScript package",
+        "updated_at": "2026-04-30T04:51:41.351818Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.1",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R1]\n---\n\n## Description\nBootstrap the greenfield project as a strict TypeScript package with one executable `pr-babysit` entrypoint and a small internal layout for shared core, CLI, MCP, webhooks, agents, tests, and docs.\n\n**Size:** M\n**Files:** `package.json`, `tsconfig.json`, `src/bin/pr-babysit.ts`, `src/core/`, `src/cli/`, `src/mcp/`, `src/webhooks/`, `src/agents/`, `testdata/`, `README.md`\n\n## Approach\n- Use a single-package layout first; do not introduce a monorepo until shared package boundaries are proven.\n- Use strict TypeScript, explicit exports from concrete files, and no barrel exports.\n- Add lint, typecheck, and Vitest scripts before feature code.\n- Keep the CLI entrypoint thin so subcommands delegate into typed modules.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/config.json:1` \u2014 Flow settings for this planning workspace.\n- `.flow/meta.json:1` \u2014 confirms this is a fresh Flow seed.\n\n**Optional** (reference as needed):\n- GitHub Actions or release tooling can be deferred because no CI exists yet.\n\n## Key context\nThe current repo has no `package.json`, no `.git`, and an empty CodeDB snapshot. This is a clean bootstrap, not a migration.\n\n## Acceptance\n- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` exist and pass on the scaffold.\n- [ ] `pr-babysit --help` runs through the built CLI entrypoint.\n- [ ] The package has no runtime dependency on `agent-reviews`.\n- [ ] The source layout has clear homes for core GitHub logic, CLI commands, MCP tools, webhook handling, and agent runner code.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:46.062681Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.1"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.2",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.2.md",
+        "status": "todo",
+        "title": "Build shared GitHub review core",
+        "updated_at": "2026-04-30T04:51:41.505143Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.2",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R2, R3, R9]\n---\n\n## Description\nBuild the shared GitHub review core used by both CLI and MCP. It should authenticate via `GITHUB_TOKEN` or `gh auth token`, fetch PR context, list paginated review threads through GraphQL, keep PR issue comments separate, provide read-only checks data, and enforce reply-before-resolve.\n\n**Size:** M\n**Files:** `src/core/github/`, `src/core/review/`, `src/core/types.ts`, `src/core/auth.ts`, `src/core/github/*.test.ts`\n\n## Approach\n- Treat GraphQL `reviewThreads` as the inline-review source of truth.\n- Use GitHub REST issue comments only for top-level PR conversation comments.\n- Model checks as read-only in v1; define whether the returned view includes check runs, commit statuses, or both.\n- Make `replyAndResolve` perform reply then resolve, with no resolve attempt when reply fails.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 acceptance and API boundaries.\n\n**Optional** (reference as needed):\n- GitHub GraphQL docs for `reviewThreads`, `addPullRequestReviewThreadReply`, and `resolveReviewThread`.\n- GitHub REST docs for issue comments and pull request review comments.\n\n## Key context\nPrior memory and research agree that live `pullRequest.reviewThreads` is the reliable blocker graph; `agent-reviews --unanswered` style aggregation is noisier and should not drive the core model.\n\n## Acceptance\n- [ ] `listReviewThreads` returns unresolved, resolved, outdated, bot/human, path, line, author, URL, and capability fields from paginated GraphQL data.\n- [ ] `replyToThread`, `resolveThread`, and `replyAndResolve` use GraphQL thread mutations and surface permission failures clearly.\n- [ ] `listIssueComments` and `replyToIssueComment` are separate from review-thread APIs.\n- [ ] `listChecks` is read-only and its check/status coverage is documented in the returned type and tests.\n- [ ] Unit tests cover pagination, malformed responses, auth failure, rate-limit-shaped errors, and reply-success/resolve-failure partial outcomes.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:46.405916Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.2"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.3",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.3.md",
+        "status": "todo",
+        "title": "Add CLI review commands",
+        "updated_at": "2026-04-30T04:51:41.654550Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.3",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R3]\n---\n\n## Description\nExpose stable human and agent-shell CLI commands over the shared review core: PR parsing, review thread listing, replies, resolution, reply-and-resolve, comments, and checks. Commands must be usable from normal terminals and from agents that prefer shell JSON over MCP.\n\n**Size:** M\n**Files:** `src/cli/commands/reviews.ts`, `src/cli/commands/comments.ts`, `src/cli/commands/checks.ts`, `src/cli/pr-target.ts`, `src/bin/pr-babysit.ts`, `src/cli/**/*.test.ts`\n\n## Approach\n- Support `OWNER/REPO#123`, PR URL, number-only from current git remote, and no-arg current-branch resolution where possible.\n- Keep `--json` output compact and stable.\n- Use non-zero exits and machine-readable error shapes for auth/API/parse failures.\n- Preserve reply-before-resolve behavior by calling the shared core convenience path.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 CLI contract and target parsing rules.\n- `src/core/` \u2014 shared review core from task 2.\n\n## Acceptance\n- [ ] `pr-babysit reviews list OWNER/REPO#123 --json` returns compact JSON from the shared review core.\n- [ ] `pr-babysit reviews reply-and-resolve THREAD_ID --body \"...\"` replies before resolving and reports partial failures.\n- [ ] `comments list/reply` and `checks list --json` use the separate core surfaces.\n- [ ] PR target parsing is covered for `OWNER/REPO#123`, URL, number-only, no arg, invalid, and ambiguous cases.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:46.604035Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.2"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.4",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.4.md",
+        "status": "todo",
+        "title": "Expose MCP review tools",
+        "updated_at": "2026-04-30T04:51:41.800768Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.4",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R2, R3, R4, R9]\n---\n\n## Description\nAdd `pr-babysit mcp` as a stdio MCP server exposing typed request/response tools over the shared review core. The MCP surface should help agents inspect and mutate GitHub review state without knowing GitHub GraphQL or shell command details.\n\n**Size:** M\n**Files:** `src/mcp/server.ts`, `src/mcp/tools/review.ts`, `src/mcp/tools/pr.ts`, `src/mcp/tools/comments.ts`, `src/mcp/tools/checks.ts`, `src/mcp/**/*.test.ts`\n\n## Approach\n- Use the production MCP TypeScript SDK v1 line and stdio transport first.\n- Expose `pr.get_context`, `review.list_threads`, `review.reply`, `review.resolve_thread`, `review.reply_and_resolve`, `review.mark_false_positive`, `comments.list`, `comments.reply`, and `checks.list`.\n- Do not expose watch, polling, arbitrary shell, commit, or push tools.\n- Make `mark_false_positive` reply with the reason and then resolve; do not store hidden local state.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 MCP contract and no-polling boundary.\n- `src/core/` \u2014 shared review core from task 2.\n\n**Optional** (reference as needed):\n- MCP TypeScript SDK v1 server/tool documentation.\n\n## Key context\nCurrent MCP docs warn not to mix v1 production imports with v2 pre-alpha package surfaces. Keep this task pinned to one MCP SDK line.\n\n## Acceptance\n- [ ] An MCP inspector/client can call every listed tool and receive compact structured JSON.\n- [ ] Tool inputs are schema-validated and tool outputs are stable for agents.\n- [ ] No MCP tool can poll, watch, run arbitrary shell, commit, or push.\n- [ ] `review.mark_false_positive` leaves visible GitHub thread context by replying with the reason before resolving.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:46.762554Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.3",
+          "fn-1-build-typescript-pr-babysitter.4"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.5",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.5.md",
+        "status": "todo",
+        "title": "Implement webhook watch loop",
+        "updated_at": "2026-04-30T04:51:42.010459Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.5",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R5, R6, R8]\n---\n\n## Description\nImplement `pr-babysit watch` as the local event loop: webhook server, target-PR filtering, `gh webhook forward` child process management, delivery dedupe, debounce/single-flight queue, and close/merge shutdown.\n\n**Size:** M\n**Files:** `src/cli/commands/watch.ts`, `src/webhooks/server.ts`, `src/webhooks/normalize.ts`, `src/webhooks/filter.ts`, `src/webhooks/debounce.ts`, `testdata/webhooks/`, `src/webhooks/**/*.test.ts`\n\n## Approach\n- `POST /webhook` should return `202` immediately after validation and enqueue work.\n- `GET /healthz` should expose simple local readiness.\n- Dedupe by `X-GitHub-Delivery`; debounce by `repo/pr/headSha`.\n- Subscribe to PR, review, review comment, review thread, issue comment, check, workflow, and status events, but process only the target PR.\n- Start `gh webhook forward` when needed, detect missing `cli/gh-webhook`, report one-forwarder conflicts clearly, and kill the child process on shutdown.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 watch contract and event list.\n- `src/cli/commands/reviews.ts` \u2014 CLI command patterns from task 3.\n- `src/mcp/server.ts` \u2014 MCP startup boundary from task 4.\n\n**Optional** (reference as needed):\n- GitHub webhook docs for `X-GitHub-Delivery`, signature validation, redelivery, and `pull_request_review_thread` payloads.\n- GitHub CLI docs for `gh webhook forward`.\n\n## Acceptance\n- [ ] `POST /webhook` acknowledges quickly with `202` and queues exactly one run for a fixture delivery.\n- [ ] Duplicate delivery IDs do not enqueue duplicate runs.\n- [ ] Bursts for the same `repo/pr/headSha` collapse into one processing pass with follow-up handling.\n- [ ] Events for other PRs are ignored.\n- [ ] `watch` exits on target PR close/merge and cleans up the forwarder child process.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:46.895173Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.5"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.6",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.6.md",
+        "status": "todo",
+        "title": "Add agent runner and stale-head guards",
+        "updated_at": "2026-04-30T04:51:42.149612Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.6",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R6, R7]\n---\n\n## Description\nAdd the local agent runner and mutation guardrails. The watch loop should generate a bounded prompt/input bundle for `codex`, `claude`, or a custom command, stream output, let the agent use MCP or CLI tools, and prevent stale-head runs from mutating GitHub or git state.\n\n**Size:** M\n**Files:** `src/agents/runner.ts`, `src/agents/prompt.ts`, `src/agents/commands.ts`, `src/core/pr-state.ts`, `src/git/status.ts`, `src/cli/commands/watch.ts`, `src/agents/**/*.test.ts`\n\n## Approach\n- Auto-detect `claude` and `codex`, with `--cmd` as an explicit override.\n- Write the agent prompt/input bundle to a file and pass the target PR, head SHA, and available MCP/CLI commands.\n- The agent should never wait for future events; the outer event loop calls it again when webhooks arrive.\n- Re-fetch PR head state before any mutation path; stale runs must abort or downgrade to read-only.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 agent behavior contract.\n- `src/webhooks/` \u2014 queued event/run model from task 5.\n- `src/core/` \u2014 shared review and PR context APIs.\n\n## Key context\nUntrusted GitHub comments and diffs may influence agent prompts. Keep them as data inside a bounded prompt and force actual GitHub mutations through typed CLI/MCP/core calls.\n\n## Acceptance\n- [ ] `pr-babysit watch OWNER/REPO#123 --agent auto` detects an available agent or fails with a clear setup error.\n- [ ] Agent output streams to the terminal and failures stop the run with actionable output.\n- [ ] The prompt tells the agent not to poll GitHub and not to wait for future events.\n- [ ] Before reply/resolve/commit/push, stale target head SHA is detected and mutation is blocked.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    },
+    {
+      "data": {
+        "assignee": null,
+        "claim_note": "",
+        "claimed_at": null,
+        "created_at": "2026-04-30T04:49:47.109242Z",
+        "depends_on": [
+          "fn-1-build-typescript-pr-babysitter.6"
+        ],
+        "epic": "fn-1-build-typescript-pr-babysitter",
+        "id": "fn-1-build-typescript-pr-babysitter.7",
+        "priority": null,
+        "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.7.md",
+        "status": "todo",
+        "title": "Harden commit push and docs wrapper",
+        "updated_at": "2026-04-30T04:51:42.295818Z"
+      },
+      "id": "fn-1-build-typescript-pr-babysitter.7",
+      "runtime": null,
+      "spec": "---\nsatisfies: [R1, R7, R10]\n---\n\n## Description\nFinish the fail-closed git commit/push loop, document the operational contract, and add the tiny `/babysit` skill wrapper that delegates to `pr-babysit watch` without duplicating review logic.\n\n**Size:** M\n**Files:** `src/git/status.ts`, `src/git/commit.ts`, `src/git/push.ts`, `src/cli/commands/watch.ts`, `skills/babysit/SKILL.md`, `README.md`, `docs/mcp-config-examples.md`, `docs/auth.md`, `docs/operations/gh-webhook-forwarding.md`, `docs/safety/always-push.md`, `src/git/**/*.test.ts`\n\n## Approach\n- Refuse to start watch mode on a dirty tree unless the implementation has an explicit safe handoff model.\n- Before push, verify branch/upstream, fetch remote state, block detached or mismatched branch, and stop on push rejection.\n- If the agent already committed, push that commit; if the agent changed files only, create the default review-feedback commit; if nothing changed, do not create an empty commit.\n- The `/babysit` skill should only run `pr-babysit watch \"$ARGUMENTS\"`; no Python script, no `agent-reviews`, and no embedded review handling.\n- Docs are part of the safety boundary, not polish.\n\n## Investigation targets\n**Required** (read before coding):\n- `.flow/specs/fn-1-build-typescript-pr-babysitter.md` \u2014 always-push and wrapper contract.\n- `src/agents/runner.ts` \u2014 agent output and mutation handoff from task 6.\n- `src/cli/commands/watch.ts` \u2014 watch loop integration point.\n\n**Optional** (reference as needed):\n- Git docs for `status`, `commit`, `push`, upstream detection, and fast-forward safety.\n\n## Key context\nThe repository currently is not a git checkout, so product tests must simulate git hazards and the final end-to-end proof needs a real PR in a real git repo.\n\n## Acceptance\n- [ ] Dirty tree, detached branch, branch mismatch, missing upstream, remote advancement, and push rejection all stop with clear errors.\n- [ ] Agent-edits-only produces `fix: address PR review feedback`; agent-already-committed pushes; no-change does not create an empty commit.\n- [ ] README explains setup, auth, main CLI flow, MCP flow, and one review-thread example.\n- [ ] Docs cover MCP config, auth resolution, `gh webhook forward` limitations, and always-push safety semantics.\n- [ ] `skills/babysit/SKILL.md` is a thin launcher for `pr-babysit watch \"$ARGUMENTS\"` and contains no `agent-reviews` path.\n\n## Done summary\nPending implementation.\n\n## Evidence\nPending implementation.\n"
+    }
+  ]
+}

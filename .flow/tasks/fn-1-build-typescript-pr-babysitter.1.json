@@ -1,0 +1,14 @@
+{
+  "assignee": null,
+  "claim_note": "",
+  "claimed_at": null,
+  "created_at": "2026-04-30T04:49:45.887688Z",
+  "depends_on": [],
+  "epic": "fn-1-build-typescript-pr-babysitter",
+  "id": "fn-1-build-typescript-pr-babysitter.1",
+  "priority": null,
+  "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.1.md",
+  "status": "todo",
+  "title": "Bootstrap strict TypeScript package",
+  "updated_at": "2026-04-30T05:54:25.769393Z"
+}

@@ -1,0 +1,16 @@
+{
+  "assignee": null,
+  "claim_note": "",
+  "claimed_at": null,
+  "created_at": "2026-04-30T04:49:47.109242Z",
+  "depends_on": [
+    "fn-1-build-typescript-pr-babysitter.6"
+  ],
+  "epic": "fn-1-build-typescript-pr-babysitter",
+  "id": "fn-1-build-typescript-pr-babysitter.7",
+  "priority": null,
+  "spec_path": ".flow/tasks/fn-1-build-typescript-pr-babysitter.7.md",
+  "status": "todo",
+  "title": "Harden commit push and docs wrapper",
+  "updated_at": "2026-04-30T06:29:12.203257Z"
+}
