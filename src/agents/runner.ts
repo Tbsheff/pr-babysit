@@ -23,6 +23,24 @@ export class SubprocessCommandRunner implements CommandRunner {
   }
 }
 
+export class ShellCommandRunner implements CommandRunner {
+  readonly #commandLine: string;
+
+  public constructor(commandLine: string) {
+    this.#commandLine = commandLine;
+  }
+
+  public async run(): Promise<number> {
+    const child = spawn(this.#commandLine, { shell: true, stdio: "inherit" });
+    return new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("exit", (code) => {
+        resolve(code ?? 1);
+      });
+    });
+  }
+}
+
 export interface RunLocalAgentOptions {
   readonly agent: AgentKind;
   readonly runner: CommandRunner;
