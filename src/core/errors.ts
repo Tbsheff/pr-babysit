@@ -14,7 +14,6 @@ export type WatchSetupErrorCode =
   | "remote_mismatch"
   | "branch_mismatch"
   | "missing_upstream"
-  | "dirty_worktree"
   | "fork_head_unsupported"
   | "missing_webhook_secret"
   | "forwarder_missing"

@@ -1,20 +1,18 @@
 import { describe, expect, test } from "vitest";
 
-import { captureGitBaseline, assertCleanWorktree, assertDescendantOfBaseline } from "../../src/git/status.js";
+import { commitBaselineChanges } from "../../src/git/commit.js";
+import { captureGitBaseline, assertDescendantOfBaseline } from "../../src/git/status.js";
 import { createDisposableGitRepo, makeDirtyTree } from "../../src/testing/git/disposable-repo.js";
 
 describe("git safety guards", () => {
-  test("refuses dirty worktrees and captures baseline push set", async () => {
+  test("captures baseline push set even with dirty worktrees", async () => {
     const repo = await createDisposableGitRepo();
     try {
+      await makeDirtyTree(repo);
       const baseline = captureGitBaseline(repo.root);
       expect(baseline.preRunHeadSha).toBeTruthy();
       expect(baseline.upstreamSha).toBeTruthy();
-
-      await makeDirtyTree(repo);
-      expect(() => {
-        assertCleanWorktree(repo.root);
-      }).toThrow("dirty worktree");
+      expect(baseline.preRunStatus).toContainEqual({ status: "??", path: "dirty.txt" });
     } finally {
       await repo.cleanup();
     }
@@ -30,6 +28,23 @@ describe("git safety guards", () => {
       expect(() => {
         assertDescendantOfBaseline(baseline, repo.root);
       }).not.toThrow();
+    } finally {
+      await repo.cleanup();
+    }
+  });
+
+  test("commits only changes that happened after a dirty baseline", async () => {
+    const repo = await createDisposableGitRepo();
+    try {
+      await makeDirtyTree(repo);
+      repo.run(["add", "dirty.txt"]);
+      const baseline = captureGitBaseline(repo.root);
+
+      await repo.write("agent.txt", "agent\n");
+      expect(commitBaselineChanges(baseline, "fix: agent", repo.root)).toBe(true);
+
+      expect(repo.run(["show", "--name-only", "--format=", "HEAD"]).stdout.trim()).toBe("agent.txt");
+      expect(repo.run(["status", "--short"]).stdout).toContain("A  dirty.txt");
     } finally {
       await repo.cleanup();
     }

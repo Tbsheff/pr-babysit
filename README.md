@@ -19,7 +19,7 @@ The scaffold provides:
 Install the latest release without cloning the repo:
 
 ```bash
-curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.4/install.sh | bash
+curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.5/install.sh | bash
 ```
 
 The installer uses `npm config get prefix`, not `npm bin -g`, so it works across npm versions that removed `npm bin`. It installs the release tarball, verifies `pr-babysit` is on PATH, creates a local webhook secret, installs `cli/gh-webhook` when `gh` is available, and copies the bundled skill into Codex and Claude.
@@ -27,7 +27,7 @@ The installer uses `npm config get prefix`, not `npm bin -g`, so it works across
 Manual install:
 
 ```bash
-npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.4/pr-babysit-0.1.4.tgz
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.5/pr-babysit-0.1.5.tgz
 pr-babysit setup secret
 pr-babysit skills install
 ```

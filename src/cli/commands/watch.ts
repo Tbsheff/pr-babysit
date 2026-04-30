@@ -9,8 +9,8 @@ import { WatchProcessor, type WatchLoopRunner, type WatchRunInput } from "../../
 import { reconcileTarget, type ReconciliationOutcome } from "../../webhooks/reconcile.js";
 import { ensureSignedForwarderAvailable, startWebhookForwarder } from "../../webhooks/forwarder.js";
 import { loadReplayFixture } from "../../testing/fixtures/replay-fixture.js";
-import { captureGitBaseline, type GitBaseline } from "../../git/status.js";
-import { commitAll } from "../../git/commit.js";
+import { captureGitBaseline, hasHeadAdvanced, type GitBaseline } from "../../git/status.js";
+import { commitBaselineChanges } from "../../git/commit.js";
 import { pushBabysitCommits } from "../../git/push.js";
 import { runLocalAgent, ShellCommandRunner, SubprocessCommandRunner } from "../../agents/runner.js";
 import type { AgentKind } from "../../agents/commands.js";
@@ -113,8 +113,8 @@ class AgentWatchRunner implements WatchLoopRunner {
       throw new BabysitError("network_failed", `Agent exited with code ${String(result.exitCode)}.`);
     }
 
-    const committed = commitAll("fix: address PR review feedback");
-    if (committed) {
+    const committed = commitBaselineChanges(this.#baseline, "fix: address PR review feedback");
+    if (committed || hasHeadAdvanced(this.#baseline)) {
       pushBabysitCommits(this.#baseline);
     }
   }
