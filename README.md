@@ -14,7 +14,20 @@ The scaffold provides:
 - A replay-fixture loader for recorded webhook and GitHub-state scenarios.
 - Disposable git repository helpers for safety tests.
 
-## Commands
+## Install
+
+Install the latest release without cloning the repo:
+
+```bash
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.0/pr-babysit-0.1.0.tgz
+gh auth login
+gh extension install cli/gh-webhook
+pr-babysit --help
+```
+
+The CLI uses `GITHUB_TOKEN` when it is set; otherwise it falls back to `gh auth token`.
+
+## Development Commands
 
 ```bash
 pnpm install
