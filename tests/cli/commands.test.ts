@@ -52,4 +52,25 @@ describe("CLI commands", () => {
     expect(agentSafeCliCommands).toContain("reviews mark-false-positive");
     expect(agentSafeCliCommands).not.toContain("reviews resolve");
   });
+
+  test("watch fixture mode drains deliveries through the loop", async () => {
+    const result = await runCliForTest(
+      ["watch", target, "--fixture", "testdata/fixtures/review-comment-created.fixture.json"],
+      services()
+    );
+
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: true,
+      mode: "fixture",
+      deliveries: 1,
+      runs: [
+        {
+          runReason: "events",
+          deliveryIds: ["delivery-1"],
+          triggers: [expect.objectContaining({ event: "pull_request_review_comment" })]
+        }
+      ]
+    });
+  });
 });
