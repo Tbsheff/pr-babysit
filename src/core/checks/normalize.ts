@@ -22,8 +22,8 @@ export interface RawCommitStatus {
   readonly createdAt: string | null;
 }
 
-function latestTimestamp(values: readonly (string | null)[]): string | null {
-  const present = values.filter((value): value is string => value !== null);
+function latestTimestamp(values: readonly (string | null | undefined)[]): string | null {
+  const present = values.filter((value): value is string => value !== null && value !== undefined);
   if (present.length === 0) {
     return null;
   }

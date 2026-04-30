@@ -193,7 +193,7 @@ class LiveGitHubAdapter implements GitHubReviewAdapter {
     );
 
     return comments.map((comment) => {
-      const commentActor = actorFromLogin(comment.user.login, String(comment.user.id));
+      const commentActor = actorFromLogin(comment.user.login, comment.user.node_id);
       return {
         commentId: toIssueCommentId(comment.id),
         author: commentActor,
@@ -225,21 +225,21 @@ class LiveGitHubAdapter implements GitHubReviewAdapter {
       checkRuns.check_runs.map((checkRun): RawCheckRun => ({
         databaseId: checkRun.id,
         name: checkRun.name,
-        status: checkRun.status,
-        conclusion: checkRun.conclusion,
-        url: checkRun.html_url,
-        createdAt: checkRun.created_at,
-        startedAt: checkRun.started_at,
-        completedAt: checkRun.completed_at,
+        status: checkRun.status ?? null,
+        conclusion: checkRun.conclusion ?? null,
+        url: checkRun.html_url ?? null,
+        createdAt: checkRun.created_at ?? null,
+        startedAt: checkRun.started_at ?? null,
+        completedAt: checkRun.completed_at ?? null,
         workflowName: checkRun.check_suite?.app?.name ?? null,
         appSlug: checkRun.app?.slug ?? null
       })),
       statuses.map((status): RawCommitStatus => ({
         sha: context.headSha,
         context: status.context,
-        state: status.state,
-        targetUrl: status.target_url,
-        createdAt: status.created_at
+        state: status.state ?? null,
+        targetUrl: status.target_url ?? null,
+        createdAt: status.created_at ?? null
       }))
     );
   }
@@ -397,19 +397,19 @@ interface RestIssueComment {
   readonly created_at: string;
   readonly updated_at: string;
   readonly author_association: string;
-  readonly user: { readonly login: string; readonly id: number; readonly type: string };
+  readonly user: { readonly login: string; readonly id: number; readonly node_id: string; readonly type: string };
 }
 
 interface RestCheckRunsResponse {
   readonly check_runs: readonly {
     readonly id: number;
     readonly name: string;
-    readonly status: string | null;
-    readonly conclusion: string | null;
-    readonly html_url: string | null;
-    readonly created_at: string | null;
-    readonly started_at: string | null;
-    readonly completed_at: string | null;
+    readonly status?: string | null;
+    readonly conclusion?: string | null;
+    readonly html_url?: string | null;
+    readonly created_at?: string | null;
+    readonly started_at?: string | null;
+    readonly completed_at?: string | null;
     readonly app: { readonly slug: string | null } | null;
     readonly check_suite: { readonly app: { readonly name: string | null } | null } | null;
   }[];
@@ -417,7 +417,7 @@ interface RestCheckRunsResponse {
 
 interface RestCommitStatus {
   readonly context: string;
-  readonly state: string | null;
-  readonly target_url: string | null;
-  readonly created_at: string | null;
+  readonly state?: string | null;
+  readonly target_url?: string | null;
+  readonly created_at?: string | null;
 }
