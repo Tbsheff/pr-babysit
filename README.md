@@ -25,6 +25,43 @@ pnpm build
 node dist/bin/pr-babysit.js --help
 ```
 
+## CLI Flow
+
+```bash
+pr-babysit pr context OWNER/REPO#123
+pr-babysit reviews list OWNER/REPO#123 --json
+pr-babysit reviews reply-and-resolve OWNER/REPO#123 review-thread:PRRT_123 --expected-head abc123 --body "Fixed in abc123."
+pr-babysit comments add OWNER/REPO#123 --expected-head abc123 --body "I pushed the fix."
+pr-babysit checks list OWNER/REPO#123 --json
+```
+
+`reviews resolve` exists only for humans. Agent prompts and MCP tools expose reply-first operations instead.
+
+## MCP Flow
+
+```bash
+pr-babysit mcp --target OWNER/REPO#123
+```
+
+See [MCP config examples](docs/mcp-config-examples.md).
+
+## Watch Flow
+
+Network watch mode requires a clean checked-out target worktree, GitHub auth, same-repo PR head, branch/upstream alignment, and `PR_BABYSIT_WEBHOOK_SECRET`.
+
+```bash
+export PR_BABYSIT_WEBHOOK_SECRET="$(openssl rand -hex 32)"
+pr-babysit watch OWNER/REPO#123 --agent auto --scope all
+```
+
+Fixture mode skips network ingress and webhook forwarding:
+
+```bash
+pr-babysit watch OWNER/REPO#123 --fixture testdata/fixtures/review-comment-created.fixture.json
+```
+
+Scope defaults to `all`; `bots` and `humans` filter review-thread and PR conversation-comment author handling, not check/status reconciliation.
+
 ## Layout
 
 ```text
@@ -42,3 +79,9 @@ tests/          Vitest coverage for scaffold behavior
 ## Safety Boundary
 
 MCP code must remain agent-safe and must not expose shell, git, or arbitrary local runner capabilities. Privileged git and agent execution belong under `src/agents` and later CLI watch code.
+
+Additional docs:
+
+- [Auth](docs/auth.md)
+- [Webhook forwarding](docs/operations/gh-webhook-forwarding.md)
+- [Always-push safety](docs/safety/always-push.md)

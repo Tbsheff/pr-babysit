@@ -52,7 +52,10 @@ Untrusted GitHub comments and diffs may influence agent prompts. Keep them as da
 - [ ] Tests cover stale detection before edits, after uncommitted edits, after local commit, after rewritten/non-descendant history, after closed/merged target state, and after push rejection.
 
 ## Done summary
-Pending implementation.
+Implemented the privileged local agent runner seam with agent command detection, injectable process runner, prompt-file handoff, bounded prompt content, normalized trigger input shape, expected-head context, and explicit agent-safe CLI command list that excludes bare resolve.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`

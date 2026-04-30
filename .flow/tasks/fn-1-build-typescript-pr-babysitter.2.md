@@ -60,7 +60,10 @@ Prior memory and research agree that live `pullRequest.reviewThreads` is the rel
 - [ ] Unit tests cover pagination, malformed responses, auth failure, rate-limit-shaped errors, closed/merged target aborts, stale-head precondition failure, idempotent replay, check/status normalization including timestamp and tie-break rules, and reply-success/resolve-failure partial outcomes.
 
 ## Done summary
-Pending implementation.
+Implemented the shared GitHub review core with canonical ID helpers, shared error taxonomy, typed PR/review/comment/check/mutation contracts, idempotency marker generation, normalized check/status handling, guarded reply-before-resolve mutations, top-level PR comment idempotency, fake adapter tests, and a live GitHub adapter for PR context, review-thread GraphQL listing/mutations, REST issue comments, and check/status reads.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`

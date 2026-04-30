@@ -15,7 +15,10 @@
   "engines": {
     "node": ">=22"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.1"
+  },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "eslint": "^10.2.1",

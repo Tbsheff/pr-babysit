@@ -67,7 +67,10 @@ Implement `pr-babysit watch` as the local best-effort event loop: webhook server
 - [ ] Fixture/integration tests include idempotency marker normalization cases for CRLF-to-LF conversion and trailing-whitespace trimming per line.
 
 ## Done summary
-Pending implementation.
+Implemented the local watch/webhook seams: webhook HMAC signing/verification, authenticated `POST /webhook` and `GET /healthz` server, event normalization for subscribed webhook families, delivery dedupe and lane batching, reconciliation outcomes over live core state, fixture-mode command plumbing, and fail-closed network-watch setup when webhook secret or signed forwarder setup is unavailable.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`

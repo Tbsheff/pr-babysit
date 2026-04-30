@@ -47,7 +47,10 @@ Current MCP docs warn not to mix v1 production imports with v2 pre-alpha package
 - [ ] `checks.list` returns the normalized latest-head union schema from the core, including `id`, nullable timestamps, `lastObservedAt`, dedupe/tie-break behavior, and normative normalized enum values.
 
 ## Done summary
-Pending implementation.
+Implemented `pr-babysit mcp` with the production MCP TypeScript SDK stdio server, default agent-safe tools for PR context, review threads, guarded review replies, reply-and-resolve, false-positive marking, top-level PR comments, and checks. Bound-mode mutation enforcement rejects bare/read-only mutation attempts and wrong explicit targets.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`

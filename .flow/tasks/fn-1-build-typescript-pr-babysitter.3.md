@@ -44,7 +44,11 @@ Expose stable human and agent-shell CLI commands over the shared review core: PR
 - [ ] PR target parsing is covered for `OWNER/REPO#123`, URL, number-only, no arg, invalid, and ambiguous cases.
 
 ## Done summary
-Pending implementation.
+Implemented CLI command surfaces for `pr context`, `reviews list/reply/resolve/reply-and-resolve/mark-false-positive`, `comments list/add`, `checks list`, PR target parsing for direct targets and GitHub URLs, stable JSON output, verbatim core error envelopes, and the agent-safe command allowlist excluding human-only bare resolve.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `node dist/bin/pr-babysit.js --help`

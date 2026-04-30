@@ -47,7 +47,11 @@ The repository currently is not a git checkout, so product tests must simulate g
 - [ ] `skills/babysit/SKILL.md` is a thin launcher for `pr-babysit watch "$ARGUMENTS"` and contains no `agent-reviews` path.
 
 ## Done summary
-Pending implementation.
+Implemented fail-closed git guard modules for clean worktree startup, baseline capture, upstream/pre-run head tracking, descendant checks, commit-on-change, and push guarding. Added README setup/CLI/MCP/watch docs, auth notes, webhook forwarding docs, always-push safety docs, and the thin `skills/babysit/SKILL.md` launcher delegating to `pr-babysit watch "$ARGUMENTS"`.
 
 ## Evidence
-Pending implementation.
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `node dist/bin/pr-babysit.js --help`

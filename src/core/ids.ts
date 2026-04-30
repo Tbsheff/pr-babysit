@@ -34,3 +34,27 @@ export function parsePullRequestTarget(value: string): ParsedPullRequestTarget |
   const target: PullRequestTarget = `${owner}/${repo}#${number}`;
   return { owner, repo, number, target };
 }
+
+export function toReviewThreadId(nodeId: string): ReviewThreadId {
+  return `review-thread:${nodeId}`;
+}
+
+export function fromReviewThreadId(threadId: ReviewThreadId): string {
+  return threadId.slice("review-thread:".length);
+}
+
+export function toReviewCommentId(nodeId: string): ReviewCommentId {
+  return `review-comment:${nodeId}`;
+}
+
+export function toIssueCommentId(databaseId: number): IssueCommentId {
+  return `issue-comment:${databaseId}`;
+}
+
+export function toCheckRunId(databaseId: number): CheckRunId {
+  return `check-run:${databaseId}`;
+}
+
+export function toCommitStatusId(sha: string, context: string, createdAt: string | null): CommitStatusId {
+  return `commit-status:${sha}:${context}:${createdAt ?? "none"}`;
+}
