@@ -13,6 +13,7 @@ Usage:
   pr-babysit comments add OWNER/REPO#NUMBER --expected-head SHA --body "..."
   pr-babysit checks list OWNER/REPO#NUMBER --json
   pr-babysit mcp [--target OWNER/REPO#NUMBER]
+  pr-babysit skills install [--target all|codex|claude]
 
 Current build:
   GitHub review core, CLI JSON commands, MCP stdio tools, fixture watch mode,

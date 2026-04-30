@@ -4,6 +4,7 @@ import { runChecksCommand } from "./commands/checks.js";
 import { runCommentsCommand } from "./commands/comments.js";
 import { runPrCommand } from "./commands/pr.js";
 import { runReviewsCommand } from "./commands/reviews.js";
+import { runSkillsCommand } from "./commands/skills.js";
 import type { CliServices } from "./core-services.js";
 import { createDefaultCliServices } from "./core-services.js";
 import { formatHelp } from "./help.js";
@@ -46,6 +47,9 @@ async function dispatch(command: string, argv: readonly string[], services: CliS
   }
   if (command === "checks") {
     return runChecksCommand(argv, services);
+  }
+  if (command === "skills") {
+    return runSkillsCommand(argv);
   }
   if (command === "watch") {
     const { runWatchCommand } = await import("./commands/watch.js");

@@ -1,3 +1,7 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import { describe, expect, test } from "vitest";
 
 import { GitHubReviewCore } from "../../src/core/github/review-core.js";
@@ -73,4 +77,53 @@ describe("CLI commands", () => {
       ]
     });
   });
+
+  test("installs bundled global skills for Codex and Claude", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "pr-babysit-skills-"));
+    const originalCodexHome = process.env["CODEX_HOME"];
+    const originalClaudeHome = process.env["CLAUDE_HOME"];
+    process.env["CODEX_HOME"] = path.join(tempDir, "codex");
+    process.env["CLAUDE_HOME"] = path.join(tempDir, "claude");
+
+    try {
+      const result = await runCliForTest(["skills", "install"], services());
+      expect(result.code).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        ok: true,
+        installed: [
+          { target: "codex", directory: path.join(tempDir, "codex", "skills", "babysit") },
+          { target: "claude", directory: path.join(tempDir, "claude", "skills", "babysit") }
+        ]
+      });
+
+      await expect(readFile(path.join(tempDir, "codex", "skills", "babysit", "SKILL.md"), "utf8")).resolves.toContain(
+        "name: babysit"
+      );
+      await expect(readFile(path.join(tempDir, "claude", "skills", "babysit", "agents", "openai.yaml"), "utf8")).resolves.toContain(
+        "Babysit PR"
+      );
+    } finally {
+      restoreCodexHome(originalCodexHome);
+      restoreClaudeHome(originalClaudeHome);
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
 });
+
+function restoreCodexHome(value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env["CODEX_HOME"];
+    return;
+  }
+
+  process.env["CODEX_HOME"] = value;
+}
+
+function restoreClaudeHome(value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env["CLAUDE_HOME"];
+    return;
+  }
+
+  process.env["CLAUDE_HOME"] = value;
+}

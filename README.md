@@ -19,13 +19,19 @@ The scaffold provides:
 Install the latest release without cloning the repo:
 
 ```bash
-npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.0/pr-babysit-0.1.0.tgz
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.1/pr-babysit-0.1.1.tgz
 gh auth login
 gh extension install cli/gh-webhook
+pr-babysit skills install
 pr-babysit --help
 ```
 
 The CLI uses `GITHUB_TOKEN` when it is set; otherwise it falls back to `gh auth token`.
+
+`pr-babysit skills install` copies the bundled `/babysit` skill into both global agent homes:
+
+- Codex: `${CODEX_HOME:-$HOME/.codex}/skills/babysit`
+- Claude: `${CLAUDE_HOME:-$HOME/.claude}/skills/babysit`
 
 ## Development Commands
 
