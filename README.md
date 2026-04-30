@@ -62,6 +62,25 @@ pr-babysit watch OWNER/REPO#123 --fixture testdata/fixtures/review-comment-creat
 
 Scope defaults to `all`; `bots` and `humans` filter review-thread and PR conversation-comment author handling, not check/status reconciliation.
 
+## Codex Skill
+
+This repo ships a thin `/babysit` skill under `skills/babysit`.
+
+Install it for local Codex use:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R skills/babysit "${CODEX_HOME:-$HOME/.codex}/skills/babysit"
+```
+
+Then invoke:
+
+```text
+/babysit OWNER/REPO#123
+```
+
+The skill delegates to `pr-babysit watch "$ARGUMENTS"`; all review logic stays in the CLI.
+
 ## Layout
 
 ```text

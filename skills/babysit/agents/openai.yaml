@@ -1,0 +1,4 @@
+interface:
+  display_name: "Babysit PR"
+  short_description: "Watch and resolve PR feedback"
+  default_prompt: "Use $babysit to watch OWNER/REPO#123 and address review feedback."
