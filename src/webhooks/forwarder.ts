@@ -47,7 +47,9 @@ export function startWebhookForwarder(repo: string, port: number, secret: string
     "--secret",
     secret
   ];
-  const child = spawn("gh", args, { stdio: "inherit" });
+  const child = spawn("gh", args, { stdio: ["ignore", "pipe", "pipe"] });
+  child.stdout.pipe(process.stderr, { end: false });
+  child.stderr.pipe(process.stderr, { end: false });
 
   return {
     child,
