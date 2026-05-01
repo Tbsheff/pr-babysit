@@ -16,6 +16,24 @@ Bound agent mode:
 }
 ```
 
+Same-agent event mode:
+
+```json
+{
+  "mcpServers": {
+    "pr-babysit": {
+      "command": "pr-babysit",
+      "args": ["mcp", "--watch", "OWNER/REPO#123"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Then the agent can call `babysit.wait_for_event` to receive GitHub review/check events in the current session.
+
 Bare inspector mode:
 
 ```json
@@ -29,4 +47,4 @@ Bare inspector mode:
 }
 ```
 
-Bare mode is read-oriented. Mutating review and comment tools require `--target OWNER/REPO#NUMBER`.
+Bare mode is read-oriented. Mutating review and comment tools require `--target OWNER/REPO#NUMBER` or `--watch OWNER/REPO#NUMBER`.

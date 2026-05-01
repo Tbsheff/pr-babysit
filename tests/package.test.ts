@@ -17,6 +17,8 @@ describe("package manifest", () => {
 
   test("skill runs detached watch for current branch PR when no target is provided", async () => {
     const text = await readFile("skills/babysit/SKILL.md", "utf8");
+    expect(text).toContain("babysit.wait_for_event");
+    expect(text).toContain("Do not spawn nested agents when MCP event tools are available.");
     expect(text).toContain("pr-babysit watch \"$ARGUMENTS\" --detach");
     expect(text).toContain("pr-babysit watch --detach\nfi");
     expect(text).toContain("node dist/bin/pr-babysit.js watch --detach\nfi");

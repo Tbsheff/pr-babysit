@@ -3,10 +3,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 import type { ReviewThreadId } from "../core/ids.js";
+import { BabysitError } from "../core/errors.js";
 import { parsePrTarget } from "../cli/pr-target.js";
 import type { CliServices } from "../cli/core-services.js";
 import { readFlag } from "../cli/args.js";
 import { stringifyJson } from "../cli/output.js";
+import { startWatchRuntime, type WatchRuntime } from "../webhooks/runtime.js";
 import { requireBoundTarget } from "./boundary.js";
 
 function jsonToolResult(value: unknown): { structuredContent: Record<string, unknown>; content: { type: "text"; text: string }[] } {
@@ -17,10 +19,43 @@ function jsonToolResult(value: unknown): { structuredContent: Record<string, unk
   };
 }
 
-export function createMcpServer(argv: readonly string[], services: CliServices): McpServer {
+export function createMcpServer(argv: readonly string[], services: CliServices, runtime?: WatchRuntime): McpServer {
   const targetArg = readFlag(argv, "--target");
-  const boundTarget = targetArg === undefined ? undefined : parsePrTarget(targetArg) ?? undefined;
+  const watchArg = readFlag(argv, "--watch");
+  const boundTarget = targetArg === undefined ? (watchArg === undefined ? undefined : parsePrTarget(watchArg) ?? undefined) : parsePrTarget(targetArg) ?? undefined;
   const server = new McpServer({ name: "pr-babysit", version: "0.1.0" });
+
+  if (runtime !== undefined) {
+    server.registerTool(
+      "babysit.wait_for_event",
+      {
+        description: "Wait for the next GitHub PR event from the active babysit watcher.",
+        inputSchema: { timeoutMs: z.number().int().positive().max(300000).optional() }
+      },
+      async (input) => jsonToolResult(await runtime.queue.wait(input.timeoutMs ?? 60000))
+    );
+
+    server.registerTool(
+      "babysit.status",
+      {
+        description: "Get status for the active babysit watcher.",
+        inputSchema: {}
+      },
+      () => jsonToolResult(runtime.status())
+    );
+
+    server.registerTool(
+      "babysit.stop",
+      {
+        description: "Stop the active babysit watcher and webhook forwarder.",
+        inputSchema: {}
+      },
+      async () => {
+        await runtime.stop();
+        return jsonToolResult({ ok: true, stopped: true });
+      }
+    );
+  }
 
   server.registerTool(
     "pr.get_context",
@@ -161,6 +196,15 @@ export function createMcpServer(argv: readonly string[], services: CliServices):
 }
 
 export async function runMcpCommand(argv: readonly string[], services: CliServices): Promise<void> {
-  const server = createMcpServer(argv, services);
+  const watchArg = readFlag(argv, "--watch");
+  let runtime: WatchRuntime | undefined;
+  if (watchArg !== undefined) {
+    const watchTarget = parsePrTarget(watchArg);
+    if (watchTarget === null) {
+      throw new BabysitError("parse_failed", `Invalid pull request target: ${watchArg}`);
+    }
+    runtime = await startWatchRuntime(services.core, watchTarget);
+  }
+  const server = createMcpServer(argv, services, runtime);
   await server.connect(new StdioServerTransport());
 }

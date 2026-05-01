@@ -19,7 +19,7 @@ The scaffold provides:
 Install the latest release without cloning the repo:
 
 ```bash
-curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.7/install.sh | bash
+curl -fsSL https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.8/install.sh | bash
 ```
 
 The installer uses `npm config get prefix`, not `npm bin -g`, so it works across npm versions that removed `npm bin`. It installs the release tarball, verifies `pr-babysit` is on PATH, creates a local webhook secret, installs `cli/gh-webhook` when `gh` is available, and copies the bundled skill into Codex and Claude.
@@ -27,7 +27,7 @@ The installer uses `npm config get prefix`, not `npm bin -g`, so it works across
 Manual install:
 
 ```bash
-npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.7/pr-babysit-0.1.7.tgz
+npm install -g https://github.com/Tbsheff/pr-babysit/releases/download/v0.1.8/pr-babysit-0.1.8.tgz
 pr-babysit setup secret
 pr-babysit skills install
 ```
@@ -69,6 +69,14 @@ pr-babysit checks list OWNER/REPO#123 --json
 ```bash
 pr-babysit mcp --target OWNER/REPO#123
 ```
+
+Same-agent event mode:
+
+```bash
+pr-babysit mcp --watch OWNER/REPO#123
+```
+
+This starts webhook forwarding inside the MCP server and exposes `babysit.wait_for_event`, `babysit.status`, and `babysit.stop`.
 
 See [MCP config examples](docs/mcp-config-examples.md).
 

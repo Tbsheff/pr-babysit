@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${PR_BABYSIT_VERSION:-0.1.7}"
+VERSION="${PR_BABYSIT_VERSION:-0.1.8}"
 REPO="${PR_BABYSIT_REPO:-Tbsheff/pr-babysit}"
 PACKAGE_URL="${PR_BABYSIT_PACKAGE_URL:-https://github.com/${REPO}/releases/download/v${VERSION}/pr-babysit-${VERSION}.tgz}"
 
